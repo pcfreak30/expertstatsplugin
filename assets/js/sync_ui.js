@@ -8,7 +8,7 @@
 		submit.fadeIn();
 	})
 	$(function () {
-		$('#sync .button-primary').on('click', startSync);
+		$('#import .button-primary').on('click', startSync);
 	})
 
 	function startSync () {

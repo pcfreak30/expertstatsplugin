@@ -12,10 +12,12 @@ use Codeable\ExpertStats\Managers\Models;
  * Class Plugin
  *
  * @package Codeable\ExpertStats
- * @property \Codeable\ExpertStats\API
+ * @property \Codeable\ExpertStats\API             $api
  * @property \Codeable\ExpertStats\Managers\Models $models_manager
  * @property \Codeable\ExpertStats\Core\View       $view
  * @property \Codeable\ExpertStats\Core\Settings   $settings
+ * @property \Codeable\ExpertStats\AJAX            $ajax
+ * @property \Codeable\ExpertStats\Import          $import
  */
 class Plugin extends PluginBase {
 	/**
@@ -53,6 +55,10 @@ class Plugin extends PluginBase {
 	 * @var \Codeable\ExpertStats\Core\Settings
 	 */
 	private $settings;
+	/**
+	 * @var \Codeable\ExpertStats\Import
+	 */
+	private $import;
 
 	/**
 	 * Plugin constructor.
@@ -66,11 +72,12 @@ class Plugin extends PluginBase {
 	 * @throws \ComposePress\Core\Exception\ContainerInvalid
 	 * @throws \ComposePress\Core\Exception\ContainerNotExists
 	 */
-	public function __construct( Models $models_manager, API $api, View $view, Settings $settings ) {
+	public function __construct( Models $models_manager, API $api, View $view, Settings $settings, Import $import ) {
 		$this->models_manager = $models_manager;
 		$this->api            = $api;
 		$this->view           = $view;
 		$this->settings       = $settings;
+		$this->import         = $import;
 		parent::__construct();
 	}
 
@@ -142,6 +149,13 @@ class Plugin extends PluginBase {
 	 */
 	public function get_settings() {
 		return $this->settings;
+	}
+
+	/**
+	 * @return \Codeable\ExpertStats\Import
+	 */
+	public function get_import() {
+		return $this->import;
 	}
 
 	/**

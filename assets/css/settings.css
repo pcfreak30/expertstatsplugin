@@ -46,3 +46,25 @@
     border-color: #D58512;
     color: #ffffff;
 }
+
+.import_progress {
+    display: none;
+    height: 40px;
+}
+
+.form-table {
+    width: 35%;
+}
+
+.action-buttons {
+    width: 100px;
+}
+
+.loading {
+    width: 60%;
+    margin: auto;
+}
+
+.form-table input {
+    width: 100%;
+}

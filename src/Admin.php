@@ -6,30 +6,54 @@ namespace Codeable\ExpertStats;
 
 use Codeable\ExpertStats\Core\Component;
 
+/**
+ * Class Admin
+ *
+ * @package Codeable\ExpertStats
+ */
 class Admin extends Component {
 	/**
 	 * @var \Codeable\ExpertStats\Stats
 	 */
 	private $stats;
-	private $settings_fields = [];
 
-	public function __construct( Stats $stats ) {
+
+	/**
+	 * @var \Codeable\ExpertStats\AJAX
+	 */
+	private $ajax;
+
+	/**
+	 * Admin constructor.
+	 *
+	 * @param \Codeable\ExpertStats\Stats $stats
+	 * @param \Codeable\ExpertStats\AJAX  $ajax
+	 */
+	public function __construct( Stats $stats, AJAX $ajax ) {
 		$this->stats = $stats;
+		$this->ajax  = $ajax;
 	}
 
+	/**
+	 * @return bool
+	 */
 	public function setup() {
 		add_action( 'admin_menu', [ $this, 'register_pages' ] );
-		add_action( 'admin_init', [ $this, 'register_settings' ] );
-		$this->settings_fields = array(
-			'email'    => __( 'email', $this->plugin->safe_slug ),
-			'password' => __( 'password', $this->plugin->safe_slug ),
-		);
+
 		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_scripts' ] );
-		add_action( "pre_update_option_{$this->plugin->safe_slug}", [ $this, 'save_settings' ], 10, 2 );
+
+		//add_action( "pre_update_option_{$this->plugin->safe_slug}", [ $this, 'save_settings' ], 10, 2 );
+
 
 		return true;
 	}
 
+	/**
+	 * @param $value
+	 * @param $old_value
+	 *
+	 * @return array
+	 */
 	public function save_settings( $value, $old_value ) {
 		/** @noinspection SuspiciousAssignmentsInspection */
 		$value = $old_value;
@@ -37,41 +61,68 @@ class Admin extends Component {
 			$value = [];
 		}
 
+		foreach ( $this->settings as $setting ) {
+			if ( isset( $_POST[ $setting ] ) ) {
+				$value[ $setting ] = sanitize_text_field( $_POST[ $setting ] );
+			}
+		}
+
+		remove_action( "pre_update_option_{$this->plugin->safe_slug}", [ $this, 'save_settings' ], 10 );
+
 		if ( ! $this->verify_settings( $value ) ) {
 			return $old_value;
 		}
 
 		$value = $this->plugin->settings->undotify( $value );
 
-		$settings = array_merge( array_keys( $this->settings_fields ), [ 'import_mode' ] );
+		add_action( "pre_update_option_{$this->plugin->safe_slug}", [ $this, 'save_settings' ], 10, 2 );
 
-		foreach ( $settings as $setting ) {
-			if ( isset( $_POST[ $setting ] ) ) {
-				$value[ $setting ] = sanitize_text_field( $_POST[ $setting ] );
+		return $value;
+	}
+
+	/**
+	 * @param $value
+	 *
+	 * @return bool|\WP_Error
+	 */
+	public function verify_settings( $value, $option ) {
+		$errors = [];
+		if ( isset( $value['email'] ) && ! filter_var( $value['email'], FILTER_VALIDATE_EMAIL ) ) {
+			$errors[] = [
+				"invalid_{$this->plugin->safe_slug}_email" =>
+					__( 'Email input is not a valid email address', $this->plugin->safe_slug ),
+			];
+		}
+
+		if ( isset( $value['email'] ) && ! isset( $value['password'] ) ) {
+			$errors[] = [
+				"invalid_{$this->plugin->safe_slug}_password" =>
+					__( 'Password is required', $this->plugin->safe_slug ),
+			];
+		}
+
+		$this->plugin->api->email    = $value['email'];
+		$this->plugin->api->password = $value['password'];
+
+		if ( is_wp_error( $login_result = $this->plugin->api->login() ) ) {
+			$errors[] = [ "invalid_{$this->plugin->safe_slug}_login" => $error = $login_result->get_error_message() ];;
+		}
+
+		/** @var string $error */
+		if ( ! empty( $errors ) ) {
+			foreach ( $errors as $error_code => $error ) {
+				add_settings_error( $this->plugin->safe_slug, $error_code, $error );
 			}
+
+			$value = get_option( $option );
 		}
 
 		return $value;
 	}
 
-	public function verify_settings( $value ) {
-		$error = false;
-		if ( isset( $value['email'] ) && ! filter_var( $value['email'], FILTER_VALIDATE_EMAIL ) ) {
-			$error = __( 'Email input is not a valid email address', $this->plugin->safe_slug );
-		}
-
-		if ( isset( $value['email'] ) && ! isset( $value['password'] ) ) {
-			$error = __( 'Password is required', $this->plugin->safe_slug );
-		}
-
-		if ( ! empty( $error ) ) {
-			add_settings_error( $this->plugin->safe_slug, "invalid_{$this->plugin->safe_slug}", $error );
-			$error = true;
-		}
-
-		return $error;
-	}
-
+	/**
+	 * @param $hook
+	 */
 	public function enqueue_scripts( $hook ) {
 		if ( 'toplevel_page_codeable_transaction_stats' === $hook ) {
 			wp_enqueue_style( 'gridcss', $this->plugin->get_asset_url( 'assets/css/grid12.css' ) );
@@ -109,10 +160,30 @@ class Admin extends Component {
 			wp_enqueue_script( 'wpcablejs', $this->plugin->get_asset_url( 'assets/js/wpcable.js' ) );
 		}
 		if ( 'codeable-stats_page_codeable_settings' === $hook ) {
-			wp_enqueue_style( $this->plugin->safe_slug . '-setttings', $this->plugin->get_asset_url( 'assets/css/settings.css' ) );
+			wp_enqueue_script( 'wp-element' );
+			wp_enqueue_script( 'wp-api-fetch' );
+			wp_enqueue_script( 'wp-dom-ready' );
+			wp_enqueue_style( $this->plugin->safe_slug . '-settings', $this->plugin->get_asset_url( 'assets/css/settings.css' ) );
+			wp_enqueue_style( 'jquery-ui-progressbar' );
+			wp_enqueue_script( 'jquery-ui-progressbar' );
+			wp_localize_script( 'jquery-core', 'import_config', [ 'ajax_action' => "{$this->plugin->safe_slug}_import" ] );
+			$ui = wp_scripts()->query( 'jquery-ui-core' );
+			wp_enqueue_style( 'jquery-ui-smoothness', "//ajax.googleapis.com/ajax/libs/jqueryui/{$ui->ver}/themes/smoothness/jquery-ui.min.css", false, null );
+
+			wp_enqueue_script( $this->plugin->safe_slug . '-settings', $this->plugin->get_asset_url( 'assets/js/dist/settings.js' ), [
+				'wp-element',
+				'wp-api-fetch',
+				'wp-dom-ready',
+			] );
+			$settings = $this->plugin->settings->batch_get( array_keys( $this->plugin->settings->fields ), array_values( $this->plugin->settings->fields ) );
+			wp_localize_script( $this->plugin->safe_slug . '-settings', 'codeable_stats_settings', $settings );
+			wp_set_script_translations( $this->plugin->safe_slug . '-settings', $this->plugin->safe_slug );
 		}
 	}
 
+	/**
+	 *
+	 */
 	public function register_pages() {
 		add_menu_page(
 			__( 'Codeable Stats', $this->plugin->safe_slug ),
@@ -262,18 +333,16 @@ class Admin extends Component {
 		}
 
 		$this->plugin->view->render( 'settings', [
-			'settings_fields' => $this->settings_fields,
-			'import_mode'     => $this->plugin->settings->get( 'import_mode', 'all' ),
+			'import_mode' => $this->plugin->settings->get( 'import_mode', 'all' ),
 		] );
 	}
 
+	/**
+	 *
+	 */
 	public
 	function estimate_page() {
 
-	}
-
-	function register_settings() {
-		register_setting( $this->plugin->safe_slug, $this->plugin->safe_slug );
 	}
 
 	/**
@@ -282,5 +351,12 @@ class Admin extends Component {
 	public
 	function get_stats() {
 		return $this->stats;
+	}
+
+	/**
+	 * @return \Codeable\ExpertStats\AJAX
+	 */
+	public function get_ajax() {
+		return $this->ajax;
 	}
 }

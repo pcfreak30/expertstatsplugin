@@ -1,0 +1,11 @@
+{
+  "presets": [
+    "@babel/preset-env",
+    "@babel/preset-react"
+  ],
+  "plugins": [
+    "@wordpress/babel-plugin-import-jsx-pragma",
+    "transform-flow-comments",
+    "emotion"
+  ]
+}

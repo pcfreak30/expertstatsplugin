@@ -10,7 +10,8 @@
     "composepress/core": "0.7.5.0",
     "composepress/models": "dev-master",
     "composepress/settings": "dev-master",
-    "composepress/views": "0.3.0"
+    "composepress/views": "dev-master",
+    "composepress/view-engine-wordpress": "dev-master"
   },
   "autoload": {
     "psr-4": {
