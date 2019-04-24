@@ -19,9 +19,9 @@ const SettingsSchema = Yup.object().shape({
 		.required('Required')
 });
 
-const SettingsError = ({ name }) => {
-	return <ErrorMessage name={name} component="div" className="error settings-error"/>
-};
+const SettingsError = ({ name }) => (
+	<ErrorMessage name={name} component="div" className="error settings-error"/>
+);
 
 function saveSettings (data, props) {
 	let postData = {};
@@ -57,65 +57,62 @@ function saveSettings (data, props) {
 		});
 }
 
-const App = hot(() => {
-	return (
-		<Formik initialValues={Object.assign(codeable_stats_settings, { login: null })} onSubmit={saveSettings}
-						validationSchema={SettingsSchema}
-						validateOnChange={false} validateOnBlur={false} component={SettingsForm}/>
-	)
-});
+const App = hot(() => (
+	<Formik initialValues={Object.assign(codeable_stats_settings, { login: null })} onSubmit={saveSettings}
+					validationSchema={SettingsSchema}
+					validateOnChange={false} validateOnBlur={false} component={SettingsForm}/>
+));
 
-const SettingsForm = ({ isSubmitting, status }) => {
-	return (
-		<Form>
-			{status && !isSubmitting ? (<Notification>{__('Settings saved.', pluginSlug)}</Notification>) : ''}
-			<table className="form-table">
-				<tbody>
-					<tr>
-						<th scope="row">
-							<label htmlFor="import_mode">{__('Scan method', pluginSlug)}</label>
-						</th>
-						<td>
-							<SettingsError name="import_mode"/>
-							<Field component="select" name="import_mode">
-								<option
-									value="all">{__('Stop if the transaction id is found (use this if you want to update your data of first time fetch)', pluginSlug)}</option>
-								<option
-									value="stop_first">{__('Check everything (use this if you got a time out while fetching)', pluginSlug)}</option>
-							</Field>
-						</td>
-					</tr>
-					<tr>
-						<th scope="row">
-							<SettingsError name="login"/>
+const SettingsForm = ({ isSubmitting, status }) => (
+	<Form>
+		{status && !isSubmitting ? (<Notification>{__('Settings saved.', pluginSlug)}</Notification>) : ''}
+		<table className="form-table">
+			<tbody>
+				<tr>
+					<th scope="row">
+						<label htmlFor="import_mode">{__('Scan method', pluginSlug)}</label>
+					</th>
+					<td>
+						<SettingsError name="import_mode"/>
+						<Field component="select" name="import_mode">
+							<option
+								value="all">{__('Stop if the transaction id is found (use this if you want to update your data of first time fetch)', pluginSlug)}</option>
+							<option
+								value="stop_first">{__('Check everything (use this if you got a time out while fetching)', pluginSlug)}</option>
+						</Field>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row">
+						<SettingsError name="login"/>
 
-							<label htmlFor="email">{__('E-Mail', pluginSlug)}</label>
-						</th>
-						<td>
-							<SettingsError name="email"/>
-							<Field type="text" name="email"/>
-						</td>
-					</tr>
-					<tr>
-						<th scope="row">
-							<label htmlFor="password">{__('Password', pluginSlug)}</label>
-						</th>
-						<td>
-							<SettingsError name="password"/>
-							<Field type="password" name="password"/>
-						</td>
-					</tr>
-				</tbody>
-			</table>
-			<div className="action-buttons">
-				<div className="loading">
-					<PulseLoader loading={isSubmitting}/>
-				</div>
-				<button type="submit"
-								className="button-primary" disabled={isSubmitting}>{__('Save Changes', pluginSlug)}</button>
+						<label htmlFor="email">{__('E-Mail', pluginSlug)}</label>
+					</th>
+					<td>
+						<SettingsError name="email"/>
+						<Field type="text" name="email"/>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row">
+						<label htmlFor="password">{__('Password', pluginSlug)}</label>
+					</th>
+					<td>
+						<SettingsError name="password"/>
+						<Field type="password" name="password"/>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+		<div className="action-buttons">
+			<div className="loading">
+				<PulseLoader loading={isSubmitting}/>
 			</div>
-		</Form>)
-}
+			<button type="submit"
+							className="button-primary" disabled={isSubmitting}>{__('Save Changes', pluginSlug)}</button>
+		</div>
+	</Form>
+)
 
 domReady(() => {
 	element.render(
