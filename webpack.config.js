@@ -15,13 +15,9 @@ module.exports = {
 				test: /\.(js|jsx)$/,
 				exclude: /node_modules/,
 				use: [ 'babel-loader' ]
-			},/* {
-				test: /\.jsx?$/,
-				include: /node_modules/,
-				use: [ 'react-hot-loader/webpack' ],
-			},*/ {
+			},{
 				test: /\.s?css$/,
-				use: [ 'style-loader', 'css-loader', 'sass-loader' ],
+				use: [ 'sass-loader' ],
 			},
 		]
 	},

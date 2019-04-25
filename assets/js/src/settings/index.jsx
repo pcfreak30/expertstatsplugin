@@ -1,14 +1,15 @@
 import * as element from '@wordpress/element';
-import domReady from '@wordpress/dom-ready';
 import { hot } from 'react-hot-loader/root';
+import domReady from '@wordpress/dom-ready';
 import { ErrorMessage, Field, Form, Formik } from 'formik';
 import * as Yup from 'yup';
 import { __ } from '@wordpress/i18n';
 import apiFetch from '@wordpress/api-fetch';
 import PulseLoader, { use } from 'react-spinners/PulseLoader';
 import Notification from '../components/Notification';
+import DeletedDataNotification from './components/DeletedDataNotification';
 
-const pluginSlug = 'expertstatsplugin';
+const pluginSlug = window.codeable_stats_config.slug;
 
 const SettingsSchema = Yup.object().shape({
 	import_mode: Yup.string(),
@@ -18,6 +19,9 @@ const SettingsSchema = Yup.object().shape({
 	password: Yup.string()
 		.required('Required')
 });
+
+let deletingData = false;
+let deletedData = false;
 
 const SettingsError = ({ name }) => (
 	<ErrorMessage name={name} component="div" className="error settings-error"/>
@@ -33,7 +37,7 @@ function saveSettings (data, props) {
 		path: '/wp/v2/settings',
 		method: 'POST',
 		data: postData
-	}).catch((e) => {
+	}).catch(e => {
 		let errors = Object.assign(e.message.message);
 		if (e.additional_errors && e.additional_errors.length) {
 			e.additional_errors.forEach((item) => {
@@ -57,10 +61,56 @@ function saveSettings (data, props) {
 		});
 }
 
+function deleteData () {
+	deletingData = true;
+	deletedData = false;
+	apiFetch({ path: `/wp/v1/${pluginSlug}/delete_data`, method: 'POST' }).catch(e => {
+		deletingData = false;
+		let message = e.message;
+		if ('object' !== typeof message) {deletedData = true;
+			alert(message);
+			return
+		}
+		for (let error in message) {
+			if (!errors.hasOwnProperty(deletingData)) {
+				continue;
+			}
+			alert(message[ error ]);
+		}
+	}).then(() => {
+		deletingData = false;
+		deletedData = true;
+	})
+
+}
+
+const DeletingLoader = () => {
+	if (deletedData) {
+		return (<PulseLoader loading={true}/>);
+	}
+
+	return (<PulseLoader loading={false}/>);
+};
+
 const App = hot(() => (
-	<Formik initialValues={Object.assign(codeable_stats_settings, { login: null })} onSubmit={saveSettings}
-					validationSchema={SettingsSchema}
-					validateOnChange={false} validateOnBlur={false} component={SettingsForm}/>
+	<>
+		<div className="wrap">
+			<Formik initialValues={Object.assign(codeable_stats_settings, { login: null })} onSubmit={saveSettings}
+							validationSchema={SettingsSchema}
+							validateOnChange={false} validateOnBlur={false} component={SettingsForm}/>
+		</div>
+		<div className="wrap button-controls">
+			<button name="submit"
+							className="button button-large button-action">{__('Fetch remote data', pluginSlug)}</button>
+			<button name="submit"
+							className="button button-large button-danger"
+							onClick={deleteData}>{__('Delete cached data', pluginSlug)}</button>
+			<DeletedDataNotification deleted={deletedData}/>
+			<div className="loading">
+				<PulseLoader loading={deletingData}/>
+			</div>
+		</div>
+	</>
 ));
 
 const SettingsForm = ({ isSubmitting, status }) => (

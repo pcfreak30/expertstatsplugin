@@ -16,7 +16,7 @@ use Codeable\ExpertStats\Managers\Models;
  * @property \Codeable\ExpertStats\Managers\Models $models_manager
  * @property \Codeable\ExpertStats\Core\View       $view
  * @property \Codeable\ExpertStats\Core\Settings   $settings
- * @property \Codeable\ExpertStats\AJAX            $ajax
+ * @property \Codeable\ExpertStats\REST            $ajax
  * @property \Codeable\ExpertStats\Import          $import
  */
 class Plugin extends PluginBase {
@@ -59,6 +59,10 @@ class Plugin extends PluginBase {
 	 * @var \Codeable\ExpertStats\Import
 	 */
 	private $import;
+	/**
+	 * @var \Codeable\ExpertStats\REST
+	 */
+	private $rest;
 
 	/**
 	 * Plugin constructor.
@@ -69,15 +73,19 @@ class Plugin extends PluginBase {
 	 *
 	 * @param \Codeable\ExpertStats\Core\Settings   $settings
 	 *
+	 * @param \Codeable\ExpertStats\Import          $import
+	 * @param \Codeable\ExpertStats\REST            $rest
+	 *
 	 * @throws \ComposePress\Core\Exception\ContainerInvalid
 	 * @throws \ComposePress\Core\Exception\ContainerNotExists
 	 */
-	public function __construct( Models $models_manager, API $api, View $view, Settings $settings, Import $import ) {
+	public function __construct( Models $models_manager, API $api, View $view, Settings $settings, Import $import, REST $rest ) {
 		$this->models_manager = $models_manager;
 		$this->api            = $api;
 		$this->view           = $view;
 		$this->settings       = $settings;
 		$this->import         = $import;
+		$this->rest           = $rest;
 		parent::__construct();
 	}
 
@@ -85,7 +93,7 @@ class Plugin extends PluginBase {
 	 * @return bool
 	 */
 	public function setup() {
-		load_plugin_textdomain( 'wpcable', false, dirname( $this->plugin_file ) . '/languages/' );
+		load_plugin_textdomain( $this->safe_slug, false, dirname( $this->plugin_file ) . '/languages/' );
 
 		return true;
 	}
@@ -156,6 +164,13 @@ class Plugin extends PluginBase {
 	 */
 	public function get_import() {
 		return $this->import;
+	}
+
+	/**
+	 * @return \Codeable\ExpertStats\REST
+	 */
+	public function get_rest() {
+		return $this->rest;
 	}
 
 	/**

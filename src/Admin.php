@@ -17,21 +17,14 @@ class Admin extends Component {
 	 */
 	private $stats;
 
-
-	/**
-	 * @var \Codeable\ExpertStats\AJAX
-	 */
-	private $ajax;
-
 	/**
 	 * Admin constructor.
 	 *
 	 * @param \Codeable\ExpertStats\Stats $stats
-	 * @param \Codeable\ExpertStats\AJAX  $ajax
+	 * @param \Codeable\ExpertStats\REST  $ajax
 	 */
-	public function __construct( Stats $stats, AJAX $ajax ) {
+	public function __construct( Stats $stats ) {
 		$this->stats = $stats;
-		$this->ajax  = $ajax;
 	}
 
 	/**
@@ -163,7 +156,7 @@ class Admin extends Component {
 			wp_enqueue_script( 'wp-element' );
 			wp_enqueue_script( 'wp-api-fetch' );
 			wp_enqueue_script( 'wp-dom-ready' );
-			wp_enqueue_style( $this->plugin->safe_slug . '-settings', $this->plugin->get_asset_url( 'assets/css/settings.css' ) );
+			wp_enqueue_style( $this->plugin->safe_slug . '-settings', $this->plugin->get_asset_url( 'assets/css/dist/settings.css' ) );
 			wp_enqueue_style( 'jquery-ui-progressbar' );
 			wp_enqueue_script( 'jquery-ui-progressbar' );
 			wp_localize_script( 'jquery-core', 'import_config', [ 'ajax_action' => "{$this->plugin->safe_slug}_import" ] );
@@ -177,6 +170,7 @@ class Admin extends Component {
 			] );
 			$settings = $this->plugin->settings->batch_get( array_keys( $this->plugin->settings->fields ), array_values( $this->plugin->settings->fields ) );
 			wp_localize_script( $this->plugin->safe_slug . '-settings', 'codeable_stats_settings', $settings );
+			wp_localize_script( $this->plugin->safe_slug . '-settings', 'codeable_stats_config', [ 'slug' => $this->plugin->safe_slug ] );
 			wp_set_script_translations( $this->plugin->safe_slug . '-settings', $this->plugin->safe_slug );
 		}
 	}
@@ -306,32 +300,6 @@ class Admin extends Component {
 	 */
 	public function settings_page() {
 
-		if ( isset( $_GET['flushdata'] ) ) {
-			$tables = array(
-				__( 'Transactions', $this->plugin->safe_slug ) => $this->plugin->models_manager->transaction,
-				__( 'Clients', $this->plugin->safe_slug )      => $this->plugin->models_manager->client,
-				__( 'Amounts', $this->plugin->safe_slug )      => $this->plugin->models_manager->amount,
-			);
-
-			/** @var \Codeable\ExpertStats\Core\Model $model */
-			foreach ( $tables as $db_label => $model ) {
-				$model->sql( 'TRUNCATE {table}' );
-				if ( empty( $this->wpdb->last_error ) ) {
-					$message = __( 'table truncated!', $this->plugin->safe_slug );
-					$type    = 'updated';
-				} else {
-					$message = __( 'table could not be truncated!', $this->plugin->safe_slug );
-					$type    = 'notice';
-				}
-				$this->plugin->view->render( '_partial/db_notice', [
-					'db_label' => $db_label,
-					'db_table' => $model->table->full_name,
-					'message'  => $message,
-					'type'     => $type,
-				] );
-			}
-		}
-
 		$this->plugin->view->render( 'settings', [
 			'import_mode' => $this->plugin->settings->get( 'import_mode', 'all' ),
 		] );
@@ -351,12 +319,5 @@ class Admin extends Component {
 	public
 	function get_stats() {
 		return $this->stats;
-	}
-
-	/**
-	 * @return \Codeable\ExpertStats\AJAX
-	 */
-	public function get_ajax() {
-		return $this->ajax;
 	}
 }

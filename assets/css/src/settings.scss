@@ -1,4 +1,5 @@
-.button.button-action {
+.button {
+  &.button-action {
     background: #5CB85C;
     border-color: #4CAE4C;
     color: #ffffff;
@@ -6,30 +7,30 @@
     -webkit-box-shadow: none;
     -moz-box-shadow: none;
     box-shadow: none;
-}
 
-.button.button-action:hover {
-    background: #449D44;
-    border-color: #398439;
-    color: #ffffff;
-}
+    &:hover {
+      background: #449D44;
+      border-color: #398439;
+      color: #ffffff;
+    }
+  }
 
-.button.button-danger {
+  &.button-danger {
     background: #D9534F;
     border-color: #D43F3A;
     color: #ffffff;
     -webkit-box-shadow: none;
     -moz-box-shadow: none;
     box-shadow: none;
-}
 
-.button.button-danger:hover {
-    background: #C9302C;
-    border-color: #AC2925;
-    color: #ffffff;
-}
+    &:hover {
+      background: #C9302C;
+      border-color: #AC2925;
+      color: #ffffff;
+    }
+  }
 
-.button.button-warning {
+  &.button-warning {
     padding-left: 25px;
     padding-right: 25px;
     font-weight: bold;
@@ -39,32 +40,37 @@
     -webkit-box-shadow: none;
     -moz-box-shadow: none;
     box-shadow: none;
-}
 
-.button.button-warning:hover {
-    background: #EC971F;
-    border-color: #D58512;
-    color: #ffffff;
+    &:hover {
+      background: #EC971F;
+      border-color: #D58512;
+      color: #ffffff;
+    }
+  }
 }
 
 .import_progress {
-    display: none;
-    height: 40px;
+  display: none;
+  height: 40px;
 }
 
 .form-table {
-    width: 35%;
+  width: 35%;
 }
 
 .action-buttons {
-    width: 100px;
+  width: 100px;
 }
 
 .loading {
-    width: 60%;
-    margin: auto;
+  width: 60%;
+  margin: auto;
 }
 
 .form-table input {
-    width: 100%;
+  width: 100%;
+}
+
+.button-controls {
+  margin-top: 100px;
 }
